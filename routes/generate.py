@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 from models.schemas import LearningPathRequest
 from services.gemini import generate_learning_path
+from models.schemas import QuizRequest, QuizSubmission
+from services.gemini import generate_quiz, grade_quiz
 
 router = APIRouter()
 
