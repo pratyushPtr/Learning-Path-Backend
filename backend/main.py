@@ -1,19 +1,9 @@
-# Import the os module for accessing environment variables
 import os
-
-# Import FastAPI framework for building the web application
 from fastapi import FastAPI
-
-# Import dotenv loader to read environment variables from .env file
+from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-
-# Import the generate router from routes module
 from routes.generate import router as generate_router
-
-# Import the quiz router from routes module
 from routes.quiz import router as quiz_router
-
-# Import the configure_gemini function from services module
 from services.gemini import configure_gemini
 
 # Load environment variables from the .env file
@@ -21,6 +11,15 @@ load_dotenv()
 
 # Create a FastAPI application instance
 app = FastAPI(title="Learning Path Generator")
+
+# Configure CORS Middleware to allow cross-origin requests from your React frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows your Vite React app to connect safely
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows OPTIONS, POST, GET, etc.
+    allow_headers=["*"],
+)
 
 # Configure the Gemini LLM API with safety check
 llm_api_key = os.getenv("LLM_API_KEY")
@@ -32,7 +31,6 @@ configure_gemini(api_key=llm_api_key)
 app.include_router(generate_router)
 app.include_router(quiz_router)
 
-# Define a GET endpoint for health check
 @app.get("/health", tags=["System Health"])
 def health_check():
     return {"status": "ok"}

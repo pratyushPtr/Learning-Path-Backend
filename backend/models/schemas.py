@@ -1,11 +1,5 @@
-# Import BaseModel as the base class for all Pydantic models
-from pydantic import BaseModel
-
-# Import Field for defining model field constraints and metadata
-from pydantic import Field
-
-# Import Literal for defining enum-like field values
-from pydantic import Literal
+from typing import Literal
+from pydantic import BaseModel, Field
 
 # LearningPathRequest model - input schema for generating a learning path
 class LearningPathRequest(BaseModel):
