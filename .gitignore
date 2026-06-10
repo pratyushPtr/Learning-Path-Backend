@@ -1,5 +1,14 @@
-.env
-__pycache__/
+# Python virtual environments & execution cache
+backend/venv/
+backend/.venv/
+**/__pycache__/
 *.pyc
-*.pyo
+
+# Node dependencies & frontend build outputs
+frontend/node_modules/
+frontend/dist/
+
+# Security keys & environments
+backend/.env
+.env
 .DS_Store
