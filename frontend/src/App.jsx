@@ -14,7 +14,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 
-const BACKEND_URL = 'http://127.0.0.1:8000';
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 export default function App() {
   // Input Form States
@@ -39,13 +39,13 @@ export default function App() {
     setViewState('loading');
 
     try {
-      const response = await fetch(`${BACKEND_URL}/generate`, {
+      const response = await fetch(`${BACKEND_URL}/api/generate-roadmap`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          goal: goal,
+          topic: goal,
           experience_level: experienceLevel,
-          hours_per_week: hoursPerWeek
+          weekly_hours: hoursPerWeek
         })
       });
 
@@ -227,38 +227,38 @@ export default function App() {
             <div className="space-y-6 animate-fadeIn">
               <div className="bg-neutral-900 p-6 rounded-2xl text-white shadow-xs relative overflow-hidden">
                 <span className="text-[10px] font-bold tracking-widest text-blue-400 uppercase">Target Blueprint</span>
-                <h2 className="text-lg font-semibold mt-1 tracking-tight pr-12">{roadmapData.goal}</h2>
+                <h2 className="text-lg font-semibold mt-1 tracking-tight pr-12">{roadmapData.topic}</h2>
                 <div className="flex flex-wrap gap-5 mt-4 text-[11px] text-[#86868B] font-medium border-t border-neutral-800 pt-4">
                   <div className="flex items-center gap-1.5 text-[#A1A1A6]"><Layers size={13} /> Level: <span className="text-white capitalize font-semibold">{roadmapData.experience_level}</span></div>
-                  <div className="flex items-center gap-1.5 text-[#A1A1A6]"><Clock size={13} /> Commitment: <span className="text-white font-semibold">{roadmapData.hours_per_week} hrs/wk</span></div>
-                  <div className="flex items-center gap-1.5 text-[#A1A1A6]"><Calendar size={13} /> Duration: <span className="text-white font-semibold">{roadmapData.total_weeks} Weeks</span></div>
+                  <div className="flex items-center gap-1.5 text-[#A1A1A6]"><Clock size={13} /> Commitment: <span className="text-white font-semibold">{hoursPerWeek} hrs/wk</span></div>
+                  <div className="flex items-center gap-1.5 text-[#A1A1A6]"><Calendar size={13} /> Duration: <span className="text-white font-semibold">{roadmapData.total_estimated_weeks} Weeks</span></div>
                 </div>
               </div>
 
               <div className="space-y-3.5">
-                {roadmapData.weeks.map((wk) => (
-                  <div key={wk.week} className="bg-white border border-[#E5E5EA] rounded-2xl p-5 hover:border-[#D2D2D7] hover:shadow-xs transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {roadmapData.milestones?.map((wk, i) => (
+                  <div key={wk.title} className="bg-white border border-[#E5E5EA] rounded-2xl p-5 hover:border-[#D2D2D7] hover:shadow-xs transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-start gap-4">
                       <div className="bg-[#F5F5F7] text-neutral-800 text-xs font-bold w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 border border-[#E5E5EA]/50">
                         <span className="text-[9px] uppercase tracking-wider font-semibold text-[#86868B]">Wk</span>
-                        <span className="text-sm mt-[-2px]">{wk.week}</span>
+                        <span className="text-sm mt-[-2px]">{i + 1}</span>
                       </div>
                       <div className="space-y-2">
-                        <h4 className="font-semibold text-[#1D1D1F] text-sm tracking-tight leading-snug">{wk.milestone}</h4>
+                        <h4 className="font-semibold text-[#1D1D1F] text-sm tracking-tight leading-snug">{wk.title}</h4>
                         <div className="flex flex-wrap gap-1.5">
-                          {wk.resources.map((res, i) => (
+                          {wk.key_topics?.map((res, i) => (
                             <span key={i} className="bg-[#F5F5F7] text-[#515154] text-[11px] px-2.5 py-0.5 rounded-md font-medium border border-[#E5E5EA] inline-flex items-center gap-1">
                               <BookOpen size={11} className="text-[#86868B]" /> {res}
                             </span>
                           ))}
                         </div>
                         <p className="text-[11px] text-[#86868B] leading-relaxed">
-                          <span className="font-semibold text-neutral-700 inline-flex items-center gap-0.5"><Flag size={11} className="text-blue-500" /> Checkpoint:</span> {wk.checkpoint}
+                          <span className="font-semibold text-neutral-700 inline-flex items-center gap-0.5"><Flag size={11} className="text-blue-500" /> Checkpoint:</span> {wk.description}
                         </p>
                       </div>
                     </div>
                     <button
-                      onClick={() => handleFetchQuiz(wk.milestone, wk.week)}
+                      onClick={() => handleFetchQuiz(wk.title, i + 1)}
                       className="sm:self-center bg-[#F5F5F7] hover:bg-[#E5E5EA] text-neutral-900 text-xs font-medium px-3.5 py-2 rounded-xl transition-all cursor-pointer inline-flex items-center justify-center gap-1 border border-[#E5E5EA]"
                     >
                       Quiz <ArrowRight size={13} />
@@ -290,7 +290,7 @@ export default function App() {
               {/* Dynamic Sub-State Conditional Rendering: Interactive Questions vs Output Grading Report */}
               {!quizResult ? (
                 <form onSubmit={handleQuizSubmit} className="space-y-6">
-                  {activeQuiz.questions.map((q) => (
+                  {activeQuiz.questions?.map((q) => (
                     <div key={q.question_number} className="space-y-3 border-b border-[#F5F5F7] pb-5 last:border-0 last:pb-0">
                       <h4 className="text-sm font-semibold text-neutral-800 flex items-start gap-1.5 leading-snug">
                         <span className="text-neutral-400 font-mono text-xs mt-0.5">{q.question_number}.</span>
@@ -299,7 +299,7 @@ export default function App() {
                       
                       {q.type === 'multiple_choice' ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {q.options.map((opt, oIdx) => (
+                          {q.options?.map((opt, oIdx) => (
                             <label 
                               key={oIdx} 
                               className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border text-xs font-medium transition-all ${
@@ -342,23 +342,25 @@ export default function App() {
                   {/* Grading Status Splash Header */}
                   <div className="text-center py-4 border-b border-[#F5F5F7] space-y-2">
                     <div className="mx-auto w-12 h-12 flex items-center justify-center rounded-full">
-                      {quizResult.passed ? <CheckCircle2 size={40} className="text-emerald-500" /> : <XCircle size={40} className="text-rose-500" />}
+                      {quizResult?.passed ? <CheckCircle2 size={40} className="text-emerald-500" /> : <XCircle size={40} className="text-rose-500" />}
                     </div>
                     <h4 className="text-base font-semibold text-[#1D1D1F]">
-                      {quizResult.passed ? 'Assessment Successfully Completed' : 'Review Criteria Not Met'}
+                      {quizResult?.passed ? 'Assessment Successfully Completed' : 'Review Criteria Not Met'}
                     </h4>
-                    <div className={`text-2xl font-bold ${quizResult.passed ? 'text-emerald-600' : 'text-rose-600'}`}>
-                      {quizResult.score} <span className="text-sm font-medium text-[#86868B]">/ {quizResult.total} Correct</span>
+                    <div className={`text-2xl font-bold ${quizResult?.passed ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {quizResult?.score} <span className="text-sm font-medium text-[#86868B]">/ {quizResult?.total || 0} Correct</span>
                     </div>
-                    <p className="text-xs text-[#515154] max-w-md mx-auto italic font-medium leading-relaxed bg-[#F5F5F7] p-3 rounded-xl border border-[#E5E5EA]/40">
-                      "{quizResult.overall_feedback}"
-                    </p>
+                    {quizResult?.overall_feedback && (
+                      <p className="text-xs text-[#515154] max-w-md mx-auto italic font-medium leading-relaxed bg-[#F5F5F7] p-3 rounded-xl border border-[#E5E5EA]/40">
+                        "{quizResult.overall_feedback}"
+                      </p>
+                    )}
                   </div>
 
                   {/* Individual Question AI Breakdown Cards */}
                   <div className="space-y-3">
                     <h5 className="text-xs font-bold text-[#86868B] tracking-wider uppercase">Itemized Audit</h5>
-                    {quizResult.feedback.map((fb, idx) => (
+                    {quizResult?.feedback?.map((fb, idx) => (
                       <div 
                         key={idx} 
                         className={`p-4 border rounded-xl text-xs font-medium ${
